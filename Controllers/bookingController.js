@@ -6,9 +6,9 @@ import ErrorHandler from "../Utils/ErrorHandler.js";
 
 export const bookActivity = catchAsyncError(async (req, res, next) => {
   const { activityId } = req.params;
-  const { _id: userId } = req.user || {}; 
-  
+  const { _id: userId } = req.user || {}; // Extract user from req.user if auth used
 
+  // For scenarios without auth, allow userId from body (fallback)
   const finalUserId = userId || req.body.userId;
 
   if (!finalUserId) {
@@ -25,35 +25,48 @@ export const bookActivity = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Activity not found", 404));
   }
 
-  // Prevent duplicate booking
-  const alreadyBooked = await bookingModel.findOne({
-    user: finalUserId,
-    activity: activityId,
-  });
+  // Check if the user already has a booking document
+  const existingBooking = await bookingModel.findOne({ user: finalUserId });
 
-  if (alreadyBooked) {
-    return next(
-      new ErrorHandler("You have already booked this activity", 400)
+  if (existingBooking) {
+    // If the activity is already in the user's bookings, prevent re-booking
+    const alreadyBooked = existingBooking.activities.some(
+      (booking) => booking.activity.toString() === activityId
     );
+
+    if (alreadyBooked) {
+      return next(new ErrorHandler("Activity already booked by this user", 400));
+    }
+
+    // If not already booked, push the activity to the activities array
+    existingBooking.activities.push({ activity: activityId });
+    await existingBooking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Activity booked successfully",
+      data: existingBooking,
+    });
   }
 
-  const booking = await bookingModel.create({
+  // If the user does not have a booking, create a new booking document
+  const newBooking = await bookingModel.create({
     user: finalUserId,
-    activity: activityId,
+    activities: [{ activity: activityId }],
   });
 
   res.status(201).json({
     success: true,
     message: "Activity booked successfully",
-    data: booking,
+    data: newBooking,
   });
 });
 
 
 export const getAllActivities = catchAsyncError(async (req, res, next) => {
   const activities = await activityModel
-    .findById(req.user._id)
-    .populate("user")  
+    .find() 
+    .populate("user") 
     .populate("bookings") 
     .exec();
 
@@ -67,3 +80,4 @@ export const getAllActivities = catchAsyncError(async (req, res, next) => {
     data: activities,
   });
 });
+
