@@ -1,5 +1,5 @@
 import { activityModel } from "../Models/activityModel.js";
-import { bookingModel } from "../models/bookingModel.js";
+import { bookingModel } from "../Models/bookingModel.js";
 import { userModel } from "../Models/user.js";
 import catchAsyncError from "../Utils/catchAsyncError.js";
 
