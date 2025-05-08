@@ -59,9 +59,8 @@ export const bookActivity = catchAsyncError(async (req, res, next) => {
 
 export const getAllActivities = catchAsyncError(async (req, res, next) => {
   const activities = await activityModel
-    .find()
-    .populate("activities.activity")
-    .exec();
+    .find({user: req.user._id})
+    .populate("activities.activity");
 
   if (!activities || activities.length === 0) {
     return next(new ErrorHandler("No activities found", 404));
