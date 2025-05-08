@@ -52,7 +52,7 @@ export const bookActivity = catchAsyncError(async (req, res, next) => {
 
 export const getAllActivities = catchAsyncError(async (req, res, next) => {
   const activities = await activityModel
-    .find()
+    .findById(req.user._id)
     .populate("user")  
     .populate("bookings") 
     .exec();
