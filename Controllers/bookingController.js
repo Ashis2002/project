@@ -60,7 +60,7 @@ export const bookActivity = catchAsyncError(async (req, res, next) => {
 export const getAllActivities = catchAsyncError(async (req, res, next) => {
   const activities = await activityModel
     .find()
-    .populate("activities.activity") 
+    .populate("activities.activity")
     .exec();
 
   if (!activities || activities.length === 0) {
