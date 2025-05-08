@@ -6,9 +6,8 @@ import ErrorHandler from "../Utils/ErrorHandler.js";
 
 export const bookActivity = catchAsyncError(async (req, res, next) => {
   const { activityId } = req.params;
-  const { _id: userId } = req.user || {}; // Extract user from req.user if auth used
+  const { _id: userId } = req.user || {}; 
 
-  // For scenarios without auth, allow userId from body (fallback)
   const finalUserId = userId || req.body.userId;
 
   if (!finalUserId) {
@@ -24,21 +23,17 @@ export const bookActivity = catchAsyncError(async (req, res, next) => {
   if (!activity) {
     return next(new ErrorHandler("Activity not found", 404));
   }
-
-  // Check if the user already has a booking document
   const existingBooking = await bookingModel.findOne({ user: finalUserId });
 
   if (existingBooking) {
-    // If the activity is already in the user's bookings, prevent re-booking
-    const alreadyBooked = existingBooking.activities.some(
-      (booking) => booking.activity.toString() === activityId
-    );
+    // const alreadyBooked = existingBooking.activities.some(
+    //   (booking) => booking.activity.toString() === activityId
+    // );
 
-    if (alreadyBooked) {
-      return next(new ErrorHandler("Activity already booked by this user", 400));
-    }
+    // if (alreadyBooked) {
+    //   return next(new ErrorHandler("Activity already booked by this user", 400));
+    // }
 
-    // If not already booked, push the activity to the activities array
     existingBooking.activities.push({ activity: activityId });
     await existingBooking.save();
 
@@ -49,7 +44,6 @@ export const bookActivity = catchAsyncError(async (req, res, next) => {
     });
   }
 
-  // If the user does not have a booking, create a new booking document
   const newBooking = await bookingModel.create({
     user: finalUserId,
     activities: [{ activity: activityId }],
