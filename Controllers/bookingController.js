@@ -58,8 +58,9 @@ export const bookActivity = catchAsyncError(async (req, res, next) => {
 
 
 export const getAllActivities = catchAsyncError(async (req, res, next) => {
-  const activities = await activityModel
+  const activities = await bookingModel
     .find({user: req.user._id})
+    .populate("user")
     .populate("activities.activity");
 
   if (!activities || activities.length === 0) {
